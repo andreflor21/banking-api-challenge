@@ -30,6 +30,7 @@ Uses the built-in Node test runner — no test framework dependency.
 | POST   | `/reset`                   | Clears all accounts                      |
 | GET    | `/balance?account_id=100`  | Returns the balance (read-only)          |
 | POST   | `/event`                   | `deposit`, `withdraw` or `transfer`      |
+| GET    | `/health`                  | Health check used by the container       |
 
 ```bash
 curl -X POST localhost:3000/reset
@@ -49,6 +50,16 @@ curl -X POST localhost:3000/event -H 'Content-Type: application/json' \
 curl 'localhost:3000/balance?account_id=100'
 # 200 0
 ```
+
+## Docker
+
+```bash
+docker build -t banking-api .
+docker run -p 3000:3000 banking-api
+```
+
+The image is also what the deployment uses: `PORT` defaults to `3000` and the
+server binds to `0.0.0.0`. Health check path: `/health`.
 
 ## Structure
 

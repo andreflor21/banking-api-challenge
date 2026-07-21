@@ -18,6 +18,9 @@ function buildApp(options = {}) {
   const { service = new AccountService(), logger = false } = options;
   const app = Fastify({ logger });
 
+  // Used by the container health check.
+  app.get('/health', async () => ({ status: 'ok' }));
+
   app.post('/reset', async (request, reply) => {
     service.reset();
     return reply.code(200).send('OK');
