@@ -2,18 +2,56 @@
 
 Simple banking API with in-memory state: deposits, withdrawals and transfers.
 
-## Requirements
+## Running locally
 
-- Node.js 18+ (developed on Node 24)
-
-## Running
+Requires Node.js 18+ (developed on Node 24). No database, no environment
+variables, no external service — state lives in memory.
 
 ```bash
+git clone https://github.com/andreflor21/banking-api-challenge.git
+cd banking-api-challenge
 npm install
-npm start          # http://localhost:3000
+npm start
 ```
 
-The port can be changed with `PORT=8080 npm start`.
+The server starts on `http://localhost:3000`. Use `PORT=8080 npm start` for a
+different port, or `npm run dev` to restart automatically on file changes.
+
+Check it is up:
+
+```bash
+curl localhost:3000/health
+# {"status":"ok"}
+```
+
+Then walk through a full flow:
+
+```bash
+curl -X POST localhost:3000/reset
+
+curl -X POST localhost:3000/event -H 'Content-Type: application/json' \
+  -d '{"type":"deposit","destination":"100","amount":10}'
+# {"destination":{"id":"100","balance":10}}
+
+curl 'localhost:3000/balance?account_id=100'
+# 10
+
+curl -X POST localhost:3000/event -H 'Content-Type: application/json' \
+  -d '{"type":"transfer","origin":"100","amount":4,"destination":"300"}'
+# {"origin":{"id":"100","balance":6},"destination":{"id":"300","balance":4}}
+```
+
+Balances are kept in memory only, so restarting the server clears everything —
+same effect as calling `POST /reset`.
+
+### Running with Docker
+
+If you would rather not install Node:
+
+```bash
+docker build -t banking-api .
+docker run -p 3000:3000 banking-api
+```
 
 ## Tests
 
@@ -21,7 +59,8 @@ The port can be changed with `PORT=8080 npm start`.
 npm test
 ```
 
-Uses the built-in Node test runner — no test framework dependency.
+Uses the built-in Node test runner — no test framework dependency. The suite
+covers the business rules over real state and the full API flow end to end.
 
 ## Endpoints
 
@@ -51,15 +90,11 @@ curl 'localhost:3000/balance?account_id=100'
 # 200 0
 ```
 
-## Docker
+## Deployment
 
-```bash
-docker build -t banking-api .
-docker run -p 3000:3000 banking-api
-```
-
-The image is also what the deployment uses: `PORT` defaults to `3000` and the
-server binds to `0.0.0.0`. Health check path: `/health`.
+Deployed from this repository with the included `Dockerfile`. The server binds
+to `0.0.0.0`, reads `PORT` from the environment (defaults to `3000`) and exposes
+`/health` for the platform health check.
 
 ## Structure
 
