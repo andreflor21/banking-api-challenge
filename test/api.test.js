@@ -102,6 +102,34 @@ test('POST /reset clears the accounts', async (t) => {
   assert.equal(res.body, '0');
 });
 
+test('POST /reset accepts an empty JSON body', async (t) => {
+  const app = newApp(t);
+  await event(app, { type: 'deposit', destination: '100', amount: 10 });
+
+  const res = await app.inject({
+    method: 'POST',
+    url: '/reset',
+    headers: { 'content-type': 'application/json' },
+    payload: '',
+  });
+
+  assert.equal(res.statusCode, 200);
+  assert.equal((await balance(app, '100')).statusCode, 404);
+});
+
+test('a malformed JSON body is rejected with 400', async (t) => {
+  const app = newApp(t);
+
+  const res = await app.inject({
+    method: 'POST',
+    url: '/event',
+    headers: { 'content-type': 'application/json' },
+    payload: '{"type":"deposit",',
+  });
+
+  assert.equal(res.statusCode, 400);
+});
+
 test('withdrawing more than the balance returns 422 and keeps the balance', async (t) => {
   const app = newApp(t);
   await event(app, { type: 'deposit', destination: '100', amount: 10 });

@@ -18,6 +18,22 @@ function buildApp(options = {}) {
   const { service = new AccountService(), logger = false } = options;
   const app = Fastify({ logger });
 
+  // Clients may send an empty body with `Content-Type: application/json`
+  // (POST /reset does). Fastify rejects that by default, so treat it as `{}`.
+  app.addContentTypeParser(
+    'application/json',
+    { parseAs: 'string' },
+    (request, body, done) => {
+      if (body === '') return done(null, {});
+      try {
+        done(null, JSON.parse(body));
+      } catch (error) {
+        error.statusCode = 400;
+        done(error, undefined);
+      }
+    }
+  );
+
   // Used by the container health check.
   app.get('/health', async () => ({ status: 'ok' }));
 
